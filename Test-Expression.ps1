@@ -1,5 +1,22 @@
 ﻿#requires -version 4.0
 
+<#
+   TODO: 
+   ADD A RANDOM INTERVAL OPTION WITH PARAMETERS FOR MIN AND MAX
+   need to build a scriptblock with all the parameters to avoid the overhead of using Invoke-Command
+   Create custom type and format
+   convert to a module
+    
+
+#>
+
+<#
+Change History
+v2.2  Added ie alias to IncludeExpression
+      Modified Measure-Command to invoke the scriptblock without needing to use Invoke-Command which added overhead
+      Modified examples
+
+#>
 Function Test-Expression {
 
 <#
@@ -18,13 +35,13 @@ The number of times to test the scriptblock.
 .PARAMETER Interval
 How much time to sleep in seconds between each test. Maximum is 60. You may want to use a sleep interval to mitigate possible caching effects.
 .PARAMETER IncludeExpression
-Include the test scriptblock in the output.
+Include the test scriptblock in the output. This parameter has an alias of ie.
 .PARAMETER AsJob
 Run the tests as a background job.
 .EXAMPLE
 PS C:\> $cred = Get-credential globomantics\administrator
 PS C:\> $c = "chi-dc01","chi-dc04"
-PS C:\> Test-Expression {param($computer,$cred) get-wmiobject win32_logicaldisk -computer $computer -credential $cred } -argumentList $c,$cred
+PS C:\> Test-Expression {param([string[]]$computer,$cred) get-wmiobject -class win32_logicaldisk -computername $computer -credential $cred } -argumentList $c,$cred
 
 
 Tests        : 1
@@ -43,11 +60,11 @@ PS C:\> test-expression $sb -count 10 -interval 2
 
 Tests        : 10
 TestInterval : 2
-AverageMS    : 79.16527
-MinimumMS    : 26.1216
-MaximumMS    : 105.8981
-MedianMS     : 82.7215
-TrimmedMS    : 82.454125
+AverageMS    : 72.78199
+MinimumMS    : 29.4449
+MaximumMS    : 110.6553
+MedianMS     : 90.3509
+TrimmedMS    : 73.4649625
 
 
 PS C:\> $sb2 = { foreach ($i in (1..1000)) {$_*2}}
@@ -55,11 +72,11 @@ PS C:\> test-expression $sb2 -Count 10 -interval 2
 
 Tests        : 10
 TestInterval : 2
-AverageMS    : 5.55528
-MinimumMS    : 1.7893
-MaximumMS    : 24.7843
-MedianMS     : 1.959
-TrimmedMS    : 3.6224
+AverageMS    : 6.40283
+MinimumMS    : 0.7466
+MaximumMS    : 22.968
+MedianMS     : 2.781
+TrimmedMS    : 5.0392125
 
 These examples are testing two different approaches that yield the same results over a span of 10 test runs, pausing for 2 seconds between each test. The values for Average, Minimum and Maximum are in milliseconds.
 .Example
@@ -68,14 +85,35 @@ PS C:\>  Test-expression {get-service bits,wuauserv,spooler} -count 5 -IncludeSc
 
 Tests        : 5
 TestInterval : 0.5
-AverageMS    : 5.01026
-MinimumMS    : 3.0295
-MaximumMS    : 11.3456
-MedianMS     : 3.6397
-TrimmedMS    : 3.55873333333333
+AverageMS    : 4.9711
+MinimumMS    : 2.7682
+MaximumMS    : 11.7352
+MedianMS     : 3.5341
+TrimmedMS    : 3.4507
 Expression   : get-service bits,wuauserv,spooler
 
 Include the tested expression in the output.
+.EXAMPLE
+PS C:\> Test-Expression { get-eventlog -list } -count 10 -Interval 5 -asjob
+
+Id     Name            PSJobTypeName   State         HasMoreData     Location             Command                  
+--     ----            -------------   -----         -----------     --------             -------                  
+184    Job184          RemoteJob       Running       True            WIN81-ENT-01         ...  
+
+Run the test as a background job. When the job is complete, get the results.
+
+PS C:\> receive-job 184 -keep
+
+
+Tests        : 10
+TestInterval : 5
+AverageMS    : 2.80256
+MinimumMS    : 0.7967
+MaximumMS    : 14.911
+MedianMS     : 1.4469
+TrimmedMS    : 1.5397375
+RunspaceId   : f30eb879-fe8f-4ad0-8d70-d4c8b6b4eccc
+
 .NOTES
 NAME        :  Test-Expression
 VERSION     :  2.0   
@@ -110,12 +148,16 @@ Param(
 [int]$Count = 1,
 [ValidateRange(0,60)]
 [double]$Interval = .5,
+[Alias("ie")]
 [switch]$IncludeScriptblock,
 [switch]$AsJob
 )
 
 Write-Verbose "Measuring expression:"
 Write-Verbose ($Expression | Out-String)
+if ($ArgumentList) {
+    Write-Verbose "Arguments: $($ArgumentList -join ",")"
+}
 write-Verbose "$Count time(s) with a sleep interval of $($interval*1000) milliseconds"
 <#
 define an internal scriptblock that can be used 
@@ -134,17 +176,26 @@ $myScriptBlock = {
      
      } -process {
          #invoke the scriptblock with any arguments and measure
+       ##  write-host $using:expression -ForegroundColor yellow
+        
+        Measure-Command -Expression {$($script:testblock).Invoke(@($using:argumentlist)) } -OutVariable +out
+         <#
          Measure-Command -Expression { 
-         Invoke-Command -ScriptBlock $script:testblock -ArgumentList @($using:ArgumentList)
-     } -outvariable +out
+         #Invoke-Command -ScriptBlock $script:testblock -ArgumentList @($using:ArgumentList)
+        $sb = [scriptblock]::Create($using:expression)
+        $sb.Invoke($using:argumentlist)
+        #>
+
+     #} -outvariable +out
      #pause to mitigate any caching effects
+     
      Start-Sleep -Milliseconds ($using:Interval*1000)
     } 
-   
+    
     $TestResults = $TestData | 
     Measure-Object -Property TotalMilliseconds -Average -Maximum -Minimum |
     Select-Object -Property @{Name = "Tests";Expression={$_.Count}},
-    @{Name = "TestInterval";Expression={$using:Interval}},
+    @{Name = "TestInterval";Expression = {$using:Interval}},
     @{Name = "AverageMS";Expression = {$_.Average}},
     @{Name = "MinimumMS";Expression = {$_.Minimum}},
     @{Name = "MaximumMS";Expression = {$_.Maximum}},
@@ -198,4 +249,5 @@ else {
 
 } #end function
 
+#define an optional alias
 Set-Alias -Name tex -Value Test-Expression
