@@ -15,6 +15,7 @@ Change History
 v2.2  Added ie alias to IncludeExpression
       Modified Measure-Command to invoke the scriptblock without needing to use Invoke-Command which added overhead
       Modified examples
+v2.2.1 Added MIT license
 
 #>
 Function Test-Expression {
