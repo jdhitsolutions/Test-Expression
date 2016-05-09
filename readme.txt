@@ -83,15 +83,10 @@ PARAMETERS
         about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
     
 INPUTS
-    None
-        
-    
-    
+    None   
     
 OUTPUTS
-    Custom measurement object
-        
-    
+    Custom measurement object  
     
     
 NOTES
