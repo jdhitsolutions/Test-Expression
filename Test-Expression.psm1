@@ -243,7 +243,7 @@ Param(
     $TestResults.psobject.typenames.insert(0,"my.TestResult")
 
     if ($IncludeExpression) {
-        Write-host "Adding expression to output"
+        Write-Verbose "Adding expression to output"
         $TestResults | Add-Member -MemberType Noteproperty -Name Expression -Value $Expression -PassThru
     }
     else {
