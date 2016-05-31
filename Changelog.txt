@@ -1,16 +1,22 @@
-﻿
-Change log for Test-Expression
+﻿Change log for Test-Expression
+
+v2.3.1
+Converted Readme to markdown
+minor changes to manifest
+bumped version number
+
+v2.3.0
+Add support for a random test interval
+Added Changelog.txt
+Added a module manifest
+
+v2.2.1 
+Added MIT license
 
 v2.2.0  
 Added ie alias to IncludeExpression parameter
 Modified Measure-Command to invoke the scriptblock without needing to use Invoke-Command which added overhead
 Modified examples
 
-v2.2.1 
-Added MIT license
 
-v2.3.0
-Add support for a random test interval
-Added Changelog.txt
-Added a module manifest
 
