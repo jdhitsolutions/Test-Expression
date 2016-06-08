@@ -1,5 +1,12 @@
 ﻿Change log for Test-Expression
 
+v.2.3.2
+reformatted param block for better legibility
+added Sleep alias to the Interval parameter
+Created markdown help document
+Created external help file
+bumped version number
+
 v2.3.1
 Converted Readme to markdown
 minor changes to manifest
@@ -17,6 +24,3 @@ v2.2.0
 Added ie alias to IncludeExpression parameter
 Modified Measure-Command to invoke the scriptblock without needing to use Invoke-Command which added overhead
 Modified examples
-
-
-
