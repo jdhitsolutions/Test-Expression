@@ -1,24 +1,24 @@
-#Test-Expression
+# Test-Expression
     
-##SYNOPSIS
+## SYNOPSIS
 Test a PowerShell expression for performance
     
-##SYNTAX
+## SYNTAX
     Test-Expression [-Expression] <ScriptBlock> [-ArgumentList <Object[]>] [-Count <Int32>] [-Interval <Double>] [-IncludeScriptblock] [-AsJob] [<CommonParameters>]    
+    Test-Expression [-Expression] <ScriptBlock> [-ArgumentList <Object[]>] [-Count <Int32>] [-IncludeExpression] [-AsJob] -RandomMinimum <Double> -RandomMaximum <Double> [<CommonParameters>]
 
-##DESCRIPTION
+## DESCRIPTION
 This command will test a PowerShell expression or scriptblock for a specified number of times and calculate the average runtime, in milliseconds, over all the tests. 
 The output will also show the median and trimmed values. The median is calculated by sorting the values in ascending order and selecting the value in the center of the array. If the array has an even number of elements then the median is the average of the two values in the center.
 The trimmed value will toss out the lowest and highest values and average the remaining values. This may be the most accurate indication as it will eliminate any small values which might come from caching and any large values which may come a temporary shortage of resources. You will only get a value if you run more than 1 test.
     
-##EXAMPLES
+## EXAMPLES
     
-    -------------------------- EXAMPLE 1 --------------------------
+_-------------------------- EXAMPLE 1 --------------------------_
+
     PS C:\>$cred = Get-credential globomantics\administrator
-    PS C:\> Test-Expression {param($cred) get-wmiobject win32_logicaldisk -computer chi-dc01 -credential $cred } 
-    -argumentList $cred
-    
-    
+    PS C:\> Test-Expression {param($cred) get-wmiobject win32_logicaldisk -computer chi-dc01 -credential $cred } -argumentList $cred
+       
     Tests        : 1
     TestInterval : 0.5
     AverageMS    : 1990.6779
@@ -27,10 +27,9 @@ The trimmed value will toss out the lowest and highest values and average the re
     MedianMS     : 1990.6779
     TrimmedMS    : 
     
-    Test a command once passing an argument to the scriptblock.
-    
-    
-    -------------------------- EXAMPLE 2 --------------------------
+Test a command once passing an argument to the scriptblock.
+       
+_-------------------------- EXAMPLE 2 --------------------------_
     
     PS C:\>$sb = {1..1000 | foreach {$_*2}}
     PS C:\> test-expression $sb -count 10 -interval 2
@@ -55,11 +54,9 @@ The trimmed value will toss out the lowest and highest values and average the re
     MedianMS     : 1.959
     TrimmedMS    : 3.6224
     
-    These examples are testing two different approaches that yield the same results over a span of 10 test runs, pausing 
-    for 2 seconds between each test. The values for Average, Minimum and Maximum are in milliseconds.
+These examples are testing two different approaches that yield the same results over a span of 10 test runs, pausing for 2 seconds between each test. The values for Average, Minimum and Maximum are in milliseconds.
     
-    
-    -------------------------- EXAMPLE 3 --------------------------
+_-------------------------- EXAMPLE 3 --------------------------_
     
     PS C:\>Test-expression {get-service bits,wuauserv,spooler} -count 5 -IncludeScriptblock
     
@@ -73,6 +70,7 @@ The trimmed value will toss out the lowest and highest values and average the re
     TrimmedMS    : 3.55873333333333
     Expression   : get-service bits,wuauserv,spooler
     
-    Include the tested expression in the output.
+Include the tested expression in the output.
     
 
+_Last Updated: September 7, 2016_
