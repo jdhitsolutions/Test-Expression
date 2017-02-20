@@ -1,63 +1,5 @@
 ﻿#requires -version 4.0
 
-Function Test-Expression {
-
-[cmdletbinding(DefaultParameterSetName="Interval")]
-Param(
-[Parameter(
-    Position = 0,
-    Mandatory,
-    HelpMessage = "Enter a scriptblock to test"
-    )]
-[Alias("sb")]
-[scriptblock]$Expression,
-
-[object[]]$ArgumentList,
-
-[ValidateScript({$_ -ge 1})]
-[int]$Count = 1,
-
-[Parameter(ParameterSetName = "Interval")]
-[ValidateRange(0,60)]
-[Alias("sleep")]
-[double]$Interval = .5,
-
-[Parameter(
-    ParameterSetName = "Random",
-    Mandatory
-    )]
-[Alias("min")]
-[double]$RandomMinimum,
-
-[Parameter(
-    ParameterSetName = "Random",
-    Mandatory
-    )]
-[Alias("max")]
-[double]$RandomMaximum,
-
-[Alias("ie")]
-[switch]$IncludeExpression,
-
-[switch]$AsJob
-
-)
-
-Write-Verbose "Starting: $($MyInvocation.Mycommand)"
-Write-Verbose ($PSBoundParameters | Out-string)
-Write-Verbose "Measuring expression:"
-Write-Verbose ($Expression | Out-String)
-if ($ArgumentList) {
-    Write-Verbose "Arguments: $($ArgumentList -join ",")"
-}
-
-if ($PSCmdlet.ParameterSetName -eq 'Interval') {
-    write-Verbose "$Count time(s) with a sleep interval of $interval seconds."
-}
-else {
-    write-Verbose "$Count time(s) with a random sleep interval between $RandomMinimum seconds and $RandomMaximum seconds."
-}
-
 #an internal function for the actual testing
 Function _TestMe {
 [cmdletbinding(DefaultParameterSetName="Interval")]
@@ -147,6 +89,64 @@ Param(
     }
 
 } #_TestMe function
+
+Function Test-Expression {
+
+[cmdletbinding(DefaultParameterSetName="Interval")]
+Param(
+[Parameter(
+    Position = 0,
+    Mandatory,
+    HelpMessage = "Enter a scriptblock to test"
+    )]
+[Alias("sb")]
+[scriptblock]$Expression,
+
+[object[]]$ArgumentList,
+
+[ValidateScript({$_ -ge 1})]
+[int]$Count = 1,
+
+[Parameter(ParameterSetName = "Interval")]
+[ValidateRange(0,60)]
+[Alias("sleep")]
+[double]$Interval = .5,
+
+[Parameter(
+    ParameterSetName = "Random",
+    Mandatory
+    )]
+[Alias("min")]
+[double]$RandomMinimum,
+
+[Parameter(
+    ParameterSetName = "Random",
+    Mandatory
+    )]
+[Alias("max")]
+[double]$RandomMaximum,
+
+[Alias("ie")]
+[switch]$IncludeExpression,
+
+[switch]$AsJob
+
+)
+
+Write-Verbose "Starting: $($MyInvocation.Mycommand)"
+Write-Verbose ($PSBoundParameters | Out-string)
+Write-Verbose "Measuring expression:"
+Write-Verbose ($Expression | Out-String)
+if ($ArgumentList) {
+    Write-Verbose "Arguments: $($ArgumentList -join ",")"
+}
+
+if ($PSCmdlet.ParameterSetName -eq 'Interval') {
+    write-Verbose "$Count time(s) with a sleep interval of $interval seconds."
+}
+else {
+    write-Verbose "$Count time(s) with a random sleep interval between $RandomMinimum seconds and $RandomMaximum seconds."
+}
 
 
 If ($AsJob) {

@@ -1,6 +1,12 @@
 ﻿Change log for Test-Expression
 
-v.2.3.2
+v2.3.3
+moved internal helper function
+update module manifest
+fixed Pester test bug
+published to PSGallery
+
+v2.3.2
 reformatted param block for better legibility
 added Sleep alias to the Interval parameter
 Created markdown help document

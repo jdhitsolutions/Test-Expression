@@ -1,13 +1,13 @@
 #pester tests for Test-Expression
 
-Import-Module ..\Test-Expression
+Import-Module ..\Test-Expression -force
 
 InModuleScope Test-Expression {
 
 Describe "Test-Expression" {
    
     It "Should have an alias" {
-      (Get-Alias tex).ResolvedCommand | Should Be "Test-Expression"
+      (Get-Alias tex).ResolvedCommand.Name | Should Be "Test-Expression"
     }
 
     It "Should do a single test" {
