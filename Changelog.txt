@@ -1,5 +1,14 @@
 ﻿Change log for Test-Expression
 
+v2.4.0
+added metatdata to output (Issue #2)
+modified output to include parameters if including expression
+Modified Test-Expression to accept pipelined input (Issue #3)
+Added Test-ExpressionForm to display a WPF form (Issue #1)
+updated help
+updated README
+updated manifest
+
 v2.3.3
 moved internal helper function
 update module manifest

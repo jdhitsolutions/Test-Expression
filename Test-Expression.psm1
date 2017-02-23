@@ -76,20 +76,26 @@ Param(
         ($data[1..($data.count-2)] | Measure-Object -Average).Average
   
     }}     
+    
+    #add metadata
+    $OS = Get-Ciminstance -ClassName win32_operatingsystem 
+    $TestResults | Add-Member -MemberType Noteproperty -Name PSVersion -Value $PSVersionTable.PSVersion.ToString()  
+    $TestResults | Add-Member -MemberType Noteproperty -Name OS -Value $OS.caption
+
+    if ($IncludeExpression) {
+        Write-Verbose "Adding expression to output"
+        $TestResults | Add-Member -MemberType Noteproperty -Name Expression -Value $Expression
+        $TestResults | Add-Member -MemberType Noteproperty -Name Arguments -Value $ArgumentList
+    }    
 
     Write-Verbose "Inserting a new type name"
     $TestResults.psobject.typenames.insert(0,"my.TestResult")
 
-    if ($IncludeExpression) {
-        Write-Verbose "Adding expression to output"
-        $TestResults | Add-Member -MemberType Noteproperty -Name Expression -Value $Expression -PassThru
-    }
-    else {
-        $TestResults
-    }
-
+    #write the result to the pipeline
+    $testResults
 } #_TestMe function
 
+#exposed functions
 Function Test-Expression {
 
 [cmdletbinding(DefaultParameterSetName="Interval")]
@@ -97,17 +103,21 @@ Param(
 [Parameter(
     Position = 0,
     Mandatory,
-    HelpMessage = "Enter a scriptblock to test"
+    HelpMessage = "Enter a scriptblock to test",
+    ValueFromPipeline
     )]
 [Alias("sb")]
 [scriptblock]$Expression,
 
 [object[]]$ArgumentList,
 
+[Parameter(ValueFromPipelineByPropertyName)]
 [ValidateScript({$_ -ge 1})]
 [int]$Count = 1,
 
-[Parameter(ParameterSetName = "Interval")]
+[Parameter(
+ParameterSetName = "Interval",
+ValueFromPipelineByPropertyName)]
 [ValidateRange(0,60)]
 [Alias("sleep")]
 [double]$Interval = .5,
@@ -126,6 +136,7 @@ Param(
 [Alias("max")]
 [double]$RandomMaximum,
 
+[Parameter(ValueFromPipelineByPropertyName)]
 [Alias("ie")]
 [switch]$IncludeExpression,
 
@@ -177,6 +188,100 @@ Write-Verbose "Ending: $($MyInvocation.Mycommand)"
 
 } #end function
 
+Function Test-ExpressionForm {
+[cmdletbinding()]
+Param()
+
+Add-Type -AssemblyName PresentationFramework
+
+[xml]$xaml = Get-Content $psscriptroot\form.xaml
+
+$reader = New-Object system.xml.xmlnodereader $xaml
+$form = [windows.markup.xamlreader]::Load($reader)
+
+$sb = $form.FindName("txtScriptBlock")
+$count = $form.FindName("txtCount")
+$results = $form.FindName("tbResults")
+$slider = $form.Findname("sliderStatic")
+$radioStatic = $form.FindName("radioStatic")
+$radioRandom = $form.FindName("radioRandom")
+$min = $form.FindName("txtMin")
+$Max = $form.FindName("txtMax")
+$argumentList = $form.FindName("txtArguments")
+$run = $form.FindName("btnRun")
+$quit = $form.Findname("btnQuit")
+
+#defaults
+$min.Text = 1
+$max.text = 5
+$min.IsEnabled = $False
+$max.IsEnabled = $false
+$slider.IsEnabled = $True
+
+$radioStatic.add_Checked({
+    $min.IsEnabled = $False
+    $max.IsEnabled = $false
+    $slider.IsEnabled = $True
+})
+
+$radioRandom.Add_checked({
+    $min.IsEnabled = $True
+    $max.IsEnabled = $True
+    $slider.IsEnabled = $False
+})
+
+$quit.add_click({ $form.close() })
+
+$run.add_click({
+
+#uncomment for troubleshooting
+#write-host "running" -ForegroundColor green
+
+if ($sb.Text -notmatch "\w") {
+    Write-Warning "You must enter something to test!"
+    Return
+}
+
+$params = @{
+ Expression = [scriptblock]::Create($sb.text)
+ Count = $count.text -as [int]
+ IncludeExpression = $True
+}
+
+If ($argumentList.text) {
+    $params.Add("ArgumentList",($argumentList.Text -split ","))
+}
+
+if ($radioStatic.IsChecked) {
+    $interval = [math]::round($slider.value,1)
+    $params.Add("interval",$interval)
+}
+else {
+    [double]$minimum = [math]::Round($min.Text,1)
+    [double]$maximum = [math]::Round($max.text,1)
+    $params.Add("RandomMinimum",$minimum)
+    $params.Add("RandomMaximum",$maximum)
+}
+
+$form.Cursor = [System.Windows.Input.Cursors]::Wait
+#uncomment for troubleshooting
+#$params | out-string | write-host -ForegroundColor cyan
+
+$script:out = Test-Expression @params
+
+$results.text = ($script:out | Select * -exclude OS,Expression,Arguments | Out-String).Trim()
+$form.Cursor = [System.Windows.Input.Cursors]::Default
+})
+
+$sb.Focus() | Out-Null
+$form.ShowDialog() | Out-Null
+
+#write the current results to the pipeline after the form is closed.
+$script:out
+}
+
+
 #define an optional alias
 Set-Alias -Name tex -Value Test-Expression
+Set-Alias -Name texf -Value Test-ExpressionForm
 

@@ -1,76 +1,57 @@
 # Test-Expression
-    
-## SYNOPSIS
-Test a PowerShell expression for performance
-    
-## SYNTAX
-    Test-Expression [-Expression] <ScriptBlock> [-ArgumentList <Object[]>] [-Count <Int32>] [-Interval <Double>] [-IncludeScriptblock] [-AsJob] [<CommonParameters>]    
-    Test-Expression [-Expression] <ScriptBlock> [-ArgumentList <Object[]>] [-Count <Int32>] [-IncludeExpression] [-AsJob] -RandomMinimum <Double> -RandomMaximum <Double> [<CommonParameters>]
 
-## DESCRIPTION
-This command will test a PowerShell expression or scriptblock for a specified number of times and calculate the average runtime, in milliseconds, over all the tests. 
-The output will also show the median and trimmed values. The median is calculated by sorting the values in ascending order and selecting the value in the center of the array. If the array has an even number of elements then the median is the average of the two values in the center.
-The trimmed value will toss out the lowest and highest values and average the remaining values. This may be the most accurate indication as it will eliminate any small values which might come from caching and any large values which may come a temporary shortage of resources. You will only get a value if you run more than 1 test.
-    
-## EXAMPLES
-    
-_-------------------------- EXAMPLE 1 --------------------------_
+This PowerShell module includes a primary command that will test a PowerShell expression or scriptblock for a specified number of times and calculate the average runtime, in milliseconds, over all the tests. 
 
-    PS C:\>$cred = Get-credential globomantics\administrator
-    PS C:\> Test-Expression {param($cred) get-wmiobject win32_logicaldisk -computer chi-dc01 -credential $cred } -argumentList $cred
-       
-    Tests        : 1
-    TestInterval : 0.5
-    AverageMS    : 1990.6779
-    MinimumMS    : 1990.6779
-    MaximumMS    : 1990.6779
-    MedianMS     : 1990.6779
-    TrimmedMS    : 
-    
-Test a command once passing an argument to the scriptblock.
-       
-_-------------------------- EXAMPLE 2 --------------------------_
-    
-    PS C:\>$sb = {1..1000 | foreach {$_*2}}
-    PS C:\> test-expression $sb -count 10 -interval 2
-    
-    Tests        : 10
-    TestInterval : 2
-    AverageMS    : 79.16527
-    MinimumMS    : 26.1216
-    MaximumMS    : 105.8981
-    MedianMS     : 82.7215
-    TrimmedMS    : 82.454125
-    
-    
-    PS C:\> $sb2 = { foreach ($i in (1..1000)) {$_*2}}
-    PS C:\> test-expression $sb2 -Count 10 -interval 2
-    
-    Tests        : 10
-    TestInterval : 2
-    AverageMS    : 5.55528
-    MinimumMS    : 1.7893
-    MaximumMS    : 24.7843
-    MedianMS     : 1.959
-    TrimmedMS    : 3.6224
-    
-These examples are testing two different approaches that yield the same results over a span of 10 test runs, pausing for 2 seconds between each test. The values for Average, Minimum and Maximum are in milliseconds.
-    
-_-------------------------- EXAMPLE 3 --------------------------_
-    
-    PS C:\>Test-expression {get-service bits,wuauserv,spooler} -count 5 -IncludeScriptblock
-    
-    
-    Tests        : 5
-    TestInterval : 0.5
-    AverageMS    : 5.01026
-    MinimumMS    : 3.0295
-    MaximumMS    : 11.3456
-    MedianMS     : 3.6397
-    TrimmedMS    : 3.55873333333333
-    Expression   : get-service bits,wuauserv,spooler
-    
-Include the tested expression in the output.
-    
+## Why?
+When you run a single test with `Measure-Command` the result might be affected by any number of factors. Likewise, running multiple tests may also be influenced by things such as caching. The goal in this module is to provide a test framework where you can run a test repeatedly with either a static or random interval between each test. The results are aggregated and analyzed. Hopefully, this will provide a more meaningful or realistic result.
 
-_Last Updated: September 7, 2016_
+
+    
+## Examples
+The output will also show the median and trimmed values as well as some metadata about the current PowerShell session.
+
+```
+PS C:\> $cred = Get-credential globomantics\administrator
+PS C:\> Test-Expression {param($cred) get-wmiobject win32_logicaldisk -computer chi-dc01 -credential $cred } -argumentList $cred
+   
+Tests        : 1
+TestInterval : 0.5
+AverageMS    : 1990.6779
+MinimumMS    : 1990.6779
+MaximumMS    : 1990.6779
+MedianMS     : 1990.6779
+TrimmedMS    : 
+PSVersion    : 5.1.14409.1005
+OS           : Microsoft Windows 8.1 Enterprise
+``` 
+You can also run multiple tests with random time intervals.
+
+```
+PS C:\>Test-expression {param([string[]]$Names) get-service $names} -count 5 -IncludeExpression -argumentlist @('bits','wuauserv','winrm') -RandomMinimum .5 -RandomMaximum 5.5
+
+Tests        : 5
+TestInterval : Random
+AverageMS    : 1.91406
+MinimumMS    : 0.4657
+MaximumMS    : 7.5746
+MedianMS     : 0.4806
+TrimmedMS    : 0.51
+PSVersion    : 5.1.14409.1005
+OS           : Microsoft Windows 8.1 Enterprise
+Expression   : param([string[]]$Names) get-service $names
+Arguments    : {bits, wuauserv, winrm}
+```
+
+For very long running tests, you can run them as a background job.
+
+## Graphical Testing
+The module also includes a graphical command called `Test-ExpressionForm`. This is intended to serve as both an entry and results form.
+
+![Test Expression](images/testexpressionform.png)
+
+When you quit the form the last result will be written to the pipeline including all metadata, the scriptblock and any arguments.
+
+## Known Issues
+There are no known issues at this time. Please use the Issues section of this repository to report any problems and enhancement requests.
+
+_Last Updated: 23 February 2017_
