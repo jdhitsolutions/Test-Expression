@@ -1,5 +1,7 @@
 # Test-Expression
 
+THIS COMMANDS IN THIS MODULE HAVE BEEN INTEGRATED INTO THE [PSSCRIPTTOOLS](https://github.com/jdhitsolutions/PSScriptTools) MODULE.
+
 This PowerShell module includes a primary command that will test a PowerShell expression or scriptblock for a specified number of times and calculate the average runtime, in milliseconds, over all the tests. 
 
 ## Why?
@@ -54,4 +56,4 @@ When you quit the form the last result will be written to the pipeline including
 ## Known Issues
 There are no known issues at this time. Please use the Issues section of this repository to report any problems and enhancement requests.
 
-_Last Updated: 23 February 2017_
+_Last Updated: 25 September 2018_
