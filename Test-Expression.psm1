@@ -20,7 +20,7 @@ Param(
 [switch]$IncludeExpression
 )
 
- $TestData = 1..$count | foreach -begin {
+ $TestData = 1..$count | foreach-object -begin {
      <#
       PowerShell doesn't seem to like passing a scriptblock as an
       argument when using Invoke-Command. It appears to pass it as
@@ -55,7 +55,7 @@ Param(
     @{Name = "MaximumMS";Expression = {$_.Maximum}},
     @{Name = "MedianMS";Expression = {
         #sort the values to calculate the median and trimmed values
-        $sort = $out.totalmilliseconds | sort
+        $sort = $out.totalmilliseconds | sort-object
 
         #test if there are an even or odd number of elements
         if ( ($sort.count) %2) {
@@ -71,7 +71,7 @@ Param(
     }},
     @{Name="TrimmedMS";Expression={
         #values must be sorted in ascending order
-        $data = $out.totalmilliseconds | Sort
+        $data = $out.totalmilliseconds | Sort-object
         #select elements from the second to next to last
         ($data[1..($data.count-2)] | Measure-Object -Average).Average
   
@@ -269,7 +269,7 @@ $form.Cursor = [System.Windows.Input.Cursors]::Wait
 
 $script:out = Test-Expression @params
 
-$results.text = ($script:out | Select * -exclude OS,Expression,Arguments | Out-String).Trim()
+$results.text = ($script:out | Select-object -property * -exclude OS,Expression,Arguments | Out-String).Trim()
 $form.Cursor = [System.Windows.Input.Cursors]::Default
 })
 
@@ -285,3 +285,4 @@ $script:out
 Set-Alias -Name tex -Value Test-Expression
 Set-Alias -Name texf -Value Test-ExpressionForm
 
+Export-ModuleMember -Function 'Test-Expression','Test-ExpressionForm' -Alias 'tex','texf'
